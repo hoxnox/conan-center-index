@@ -18,12 +18,15 @@ class CMakeConan(ConanFile):
 
     _source_subfolder = "source_subfolder"
     _cmake = None
+    _autotools = None
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version], strip_root=True, destination=self._source_subfolder)
 
-    def build(self):
-        autotools = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
+    def _configure_autotools(self):
+        if self._autotools:
+            return self._autotools
+        self._autotools = AutoToolsBuildEnvironment(self)
         args = [
             "" if self.options.cpuprof or self.options.heapprof or self.options.heapchecker else "--enable-minimal",
             "--enable-shared" if self.options.shared else "--enable-static",
@@ -32,8 +35,16 @@ class CMakeConan(ConanFile):
             "--enable-heap-profiler" if self.options.heapprof else "--disable-heap-profiler",
             "--enable-heap-checker" if self.options.heapchecker else "--disable-heap-checker",
         ]
-        autotools.configure(args=args, configure_dir=self._source_subfolder)
+        self._autotools.configure(args=args, configure_dir=self._source_subfolder)
+        return self._autotools
+
+    def build(self):
+        autotools = self._configure_autotools()
         autotools.make()
+
+    def package(self):
+        autotools = self._configure_autotools()
+        autotools.install()
 
     def package_info(self):
         if self.options.cpuprof or self.options.heapprof or self.options.heapchecker:
