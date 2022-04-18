@@ -1,0 +1,86 @@
+diff --git a/app/meson.build b/app/meson.build
+index 93d8c15..709f99a 100644
+--- a/app/meson.build
++++ b/app/meson.build
+@@ -1,24 +1,7 @@
+ # SPDX-License-Identifier: BSD-3-Clause
+ # Copyright(c) 2017-2019 Intel Corporation
+ 
+-apps = [
+-        'dumpcap',
+-        'pdump',
+-        'proc-info',
+-        'test-acl',
+-        'test-bbdev',
+-        'test-cmdline',
+-        'test-compress-perf',
+-        'test-crypto-perf',
+-        'test-eventdev',
+-        'test-fib',
+-        'test-flow-perf',
+-        'test-gpudev',
+-        'test-pipeline',
+-        'test-pmd',
+-        'test-regex',
+-        'test-sad',
+-]
++apps = []
+ 
+ default_cflags = machine_args + ['-DALLOW_EXPERIMENTAL_API']
+ default_ldflags = []
+diff --git a/buildtools/symlink-drivers-solibs.sh b/buildtools/symlink-drivers-solibs.sh
+index 42985e8..1234911 100644
+--- a/buildtools/symlink-drivers-solibs.sh
++++ b/buildtools/symlink-drivers-solibs.sh
+@@ -10,4 +10,4 @@
+ # 1. directory for installed regular libs e.g. lib64
+ # 2. subdirectory of libdir where the pmds are
+ 
+-cd ${MESON_INSTALL_DESTDIR_PREFIX}/$1 && ln -sfv $2/librte_*.so* .
++#cd ${MESON_INSTALL_DESTDIR_PREFIX}/$1 && ln -sfv $2/librte_*.so* .
+diff --git a/drivers/meson.build b/drivers/meson.build
+index 1d8123b..8ee9ae1 100644
+--- a/drivers/meson.build
++++ b/drivers/meson.build
+@@ -220,17 +220,7 @@ foreach subpath:subdirs
+             endif
+         endif
+ 
+-        shared_lib = shared_library(lib_name, sources,
+-                objects: objs,
+-                include_directories: includes,
+-                dependencies: shared_deps,
+-                c_args: cflags,
+-                link_args: lk_args,
+-                link_depends: lk_deps,
+-                version: abi_version,
+-                soversion: so_version,
+-                install: true,
+-                install_dir: driver_install_path)
++        shared_lib = []
+ 
+         # create a dependency object and add it to the global dictionary so
+         # testpmd or other built-in apps can find it if necessary
+diff --git a/lib/meson.build b/lib/meson.build
+index 24adbe4..83d70d7 100644
+--- a/lib/meson.build
++++ b/lib/meson.build
+@@ -246,17 +246,7 @@ foreach l:libraries
+                 output: name + '.sym_chk')
+     endif
+ 
+-    shared_lib = shared_library(libname,
+-            sources,
+-            objects: objs,
+-            c_args: cflags,
+-            dependencies: shared_deps,
+-            include_directories: includes,
+-            link_args: lk_args,
+-            link_depends: lk_deps,
+-            version: abi_version,
+-            soversion: so_version,
+-            install: true)
++    shared_lib = []
+     shared_dep = declare_dependency(link_with: shared_lib,
+             include_directories: includes,
+             dependencies: shared_deps)
