@@ -11,7 +11,7 @@ class DpdkConan(ConanFile):
     url = "https://github.com/hoxnox/conan-dpdk"
     homepage = "https://www.dpdk.org/"
     license = "BSD-3-Clause"
-    requires = "libnuma/2.0.14", "openssl/1.1.1n"
+    requires = "libnuma/2.0.14", "openssl/1.1.1n", "libpcap/1.10.1"
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
     exports_sources = ["*.patch"]
@@ -59,6 +59,16 @@ class DpdkConan(ConanFile):
         meson.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["rte_mbuf", "rte_mempool", "rte_eal", "rte_ring",
-                "rte_ethdev", "rte_net", "rte_pci", "rte_bus_pci", "rte_kvargs",
-                "rte_telemetry", "bsd"]
+        libs = "{0}/librte_mbuf.a " +      \
+               "{0}/librte_mempool.a " +   \
+               "{0}/librte_eal.a " +       \
+               "{0}/librte_ring.a " +      \
+               "{0}/librte_ethdev.a " +    \
+               "{0}/librte_net.a " +       \
+               "{0}/librte_pci.a " +       \
+               "{0}/librte_bus_pci.a " +   \
+               "{0}/librte_kvargs.a " +    \
+               "{0}/librte_telemetry.a"
+        self.cpp_info.exelinkflags.append("-Wl,--whole-archive {} -Wl,--no-whole-archive".format(libs.format(os.path.join(self.package_folder, "lib"))))
+        self.cpp_info.sharedlinkflags.append("")
+        self.cpp_info.libs = ["bsd"]
