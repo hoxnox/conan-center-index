@@ -38,6 +38,38 @@ index 42985e8..1234911 100644
  
 -cd ${MESON_INSTALL_DESTDIR_PREFIX}/$1 && ln -sfv $2/librte_*.so* .
 +#cd ${MESON_INSTALL_DESTDIR_PREFIX}/$1 && ln -sfv $2/librte_*.so* .
+diff --git a/config/meson.build b/config/meson.build
+index 7134e80..2bbda97 100644
+--- a/config/meson.build
++++ b/config/meson.build
+@@ -203,27 +203,12 @@ if libexecinfo.found() and cc.has_header('execinfo.h')
+     dpdk_extra_ldflags += '-lexecinfo'
+ endif
+ 
+-libarchive = dependency('libarchive', required: false, method: 'pkg-config')
+-if libarchive.found()
+-    dpdk_conf.set('RTE_HAS_LIBARCHIVE', 1)
+-    # Push libarchive link dependency at the project level to support
+-    # statically linking dpdk apps. Details at:
+-    # https://inbox.dpdk.org/dev/20210605004024.660267a1@sovereign/
+-    add_project_link_arguments('-larchive', language: 'c')
+-    dpdk_extra_ldflags += '-larchive'
+-endif
+-
+ # check for libbsd
+ libbsd = dependency('libbsd', required: false, method: 'pkg-config')
+ if libbsd.found()
+     dpdk_conf.set('RTE_USE_LIBBSD', 1)
+ endif
+ 
+-jansson_dep = dependency('jansson', required: false, method: 'pkg-config')
+-if jansson_dep.found()
+-    dpdk_conf.set('RTE_HAS_JANSSON', 1)
+-endif
+-
+ # check for pcap
+ pcap_dep = dependency('libpcap', required: false, method: 'pkg-config')
+ pcap_lib = is_windows ? 'wpcap' : 'pcap'
 diff --git a/drivers/meson.build b/drivers/meson.build
 index 1d8123b..8ee9ae1 100644
 --- a/drivers/meson.build
