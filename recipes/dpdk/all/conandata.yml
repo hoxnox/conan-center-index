@@ -1,0 +1,9 @@
+sources:
+  "22.03.0":
+    sha256: b2de5f08bcd5733f90d4d7e6c032515908dad8fc8d267ac6a253442d9b83a7c5
+    url: https://fast.dpdk.org/rel/dpdk-22.03.tar.xz
+patches:
+  "22.03.0":
+   - base_path: source_subfolder
+     patch_file: patches/no_shared_targets.patch
+
