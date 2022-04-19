@@ -59,16 +59,26 @@ class DpdkConan(ConanFile):
         meson.install()
 
     def package_info(self):
-        libs = "{0}/librte_mbuf.a " +      \
-               "{0}/librte_mempool.a " +   \
-               "{0}/librte_eal.a " +       \
-               "{0}/librte_ring.a " +      \
-               "{0}/librte_ethdev.a " +    \
-               "{0}/librte_net.a " +       \
-               "{0}/librte_pci.a " +       \
-               "{0}/librte_bus_pci.a " +   \
-               "{0}/librte_kvargs.a " +    \
-               "{0}/librte_telemetry.a"
+        libs = "{0}/librte_mbuf.a"          \
+               + " {0}/librte_mempool.a"    \
+               + " {0}/librte_eal.a"        \
+               + " {0}/librte_ring.a"       \
+               + " {0}/librte_hash.a"       \
+               + " {0}/librte_rcu.a"        \
+               + " {0}/librte_security.a"   \
+               + " {0}/librte_cryptodev.a"  \
+               + " {0}/librte_ethdev.a"     \
+               + " {0}/librte_pci.a"        \
+               + " {0}/librte_bus_pci.a"    \
+               + " {0}/librte_bus_vdev.a"   \
+               + " {0}/librte_bus_vmbus.a"  \
+               + " {0}/librte_kvargs.a"     \
+               + " {0}/librte_telemetry.a"  \
+               + " {0}/librte_net_i40e.a"   \
+               + " {0}/librte_net_e1000.a"  \
+               + " {0}/librte_net_ixgbe.a"  \
+               + " {0}/librte_net_virtio.a" \
+               + " {0}/librte_net.a"
         self.cpp_info.exelinkflags.append("-Wl,--whole-archive {} -Wl,--no-whole-archive".format(libs.format(os.path.join(self.package_folder, "lib"))))
         self.cpp_info.sharedlinkflags.append("")
         self.cpp_info.libs = ["bsd"]
