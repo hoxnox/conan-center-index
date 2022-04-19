@@ -117,6 +117,4 @@ class DpdkConan(ConanFile):
         # have to write libs into linkflags as a full path, but not into libs.
 
         libs_s = "{0}/librte_" + ".a {0}/librte_".join(libs) + ".a"
-        self.cpp_info.exelinkflags.append("-Wl,--whole-archive {} -Wl,--no-whole-archive".format(libs_s.format(os.path.join(self.package_folder, "lib"))))
-        self.cpp_info.sharedlinkflags.append("")
-        self.cpp_info.libs = ["bsd"]
+        self.cpp_info.libs = ["-Wl,--whole-archive {} -Wl,--no-whole-archive -lbsd".format(libs_s.format(os.path.join(self.package_folder, "lib")))]
