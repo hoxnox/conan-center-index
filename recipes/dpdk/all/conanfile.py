@@ -59,26 +59,64 @@ class DpdkConan(ConanFile):
         meson.install()
 
     def package_info(self):
-        libs = "{0}/librte_mbuf.a"          \
-               + " {0}/librte_mempool.a"    \
-               + " {0}/librte_eal.a"        \
-               + " {0}/librte_ring.a"       \
-               + " {0}/librte_hash.a"       \
-               + " {0}/librte_rcu.a"        \
-               + " {0}/librte_security.a"   \
-               + " {0}/librte_cryptodev.a"  \
-               + " {0}/librte_ethdev.a"     \
-               + " {0}/librte_pci.a"        \
-               + " {0}/librte_bus_pci.a"    \
-               + " {0}/librte_bus_vdev.a"   \
-               + " {0}/librte_bus_vmbus.a"  \
-               + " {0}/librte_kvargs.a"     \
-               + " {0}/librte_telemetry.a"  \
-               + " {0}/librte_net_i40e.a"   \
-               + " {0}/librte_net_e1000.a"  \
-               + " {0}/librte_net_ixgbe.a"  \
-               + " {0}/librte_net_virtio.a" \
-               + " {0}/librte_net.a"
-        self.cpp_info.exelinkflags.append("-Wl,--whole-archive {} -Wl,--no-whole-archive".format(libs.format(os.path.join(self.package_folder, "lib"))))
+        libs=(
+            'kvargs', # eal depends on kvargs
+            'telemetry', # basic info querying
+            'eal', # everything depends on eal
+            'ring',
+            'rcu', # rcu depends on ring
+            'mempool',
+            'mempool_ring',
+            'mempool_bucket',
+            'mempool_stack',
+            'mbuf',
+            'net',
+            'meter',
+            'ethdev',
+            'pci', # core
+            'cmdline',
+            'hash',    # efd depends on this
+            'timer',   # eventdev depends on this
+            'acl',
+            'bbdev',
+            'compressdev',
+            'cryptodev',
+            'distributor',
+            'efd',
+            'eventdev',
+            'ip_frag',
+            'lpm',
+            'member',
+            'pcapng',
+            'rawdev',
+            'regexdev',
+            'dmadev',
+            'rib',
+            'reorder',
+            'sched',
+            'security',
+            'stack',
+            'ipsec', # ipsec lib depends on net, crypto and security
+            'fib', #fib lib depends on rib
+            'port', # pkt framework libs which use other libs from above
+            'graph',
+
+            # drivers
+
+            'bus_pci',
+            'bus_vdev',
+            'bus_vmbus',
+
+            'net_i40e',
+            'net_e1000',
+            'net_ixgbe',
+            'net_virtio',
+        )
+
+        # NOTE: As fo rmid 2022 there is no adequate way to link libs as a whole archive. We
+        # have to write libs into linkflags as a full path, but not into libs.
+
+        libs_s = "{0}/librte_" + ".a {0}/librte_".join(libs) + ".a"
+        self.cpp_info.exelinkflags.append("-Wl,--whole-archive {} -Wl,--no-whole-archive".format(libs_s.format(os.path.join(self.package_folder, "lib"))))
         self.cpp_info.sharedlinkflags.append("")
         self.cpp_info.libs = ["bsd"]
