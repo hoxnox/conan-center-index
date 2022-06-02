@@ -85,7 +85,7 @@ class LibtoolConan(ConanFile):
         conf_args = [
             "--datarootdir={}".format(tools.unix_path(self._datarootdir)),
             "--prefix={}".format(tools.unix_path(self.package_folder)),
-            "--enable-shared",
+            "--enable-shared" if self.options.shared else "--disable-shared",
             "--enable-static",
             "--enable-ltdl-install",
         ]
