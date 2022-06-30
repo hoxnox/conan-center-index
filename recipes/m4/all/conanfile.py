@@ -45,7 +45,7 @@ class M4Conan(ConanFile):
         conf_args = []
         autotools = AutoToolsBuildEnvironment(self, win_bash=self._settings_build.os == "Windows")
         build_canonical_name = None
-        host_canonical_name = None
+        host_canonical_name = os.getenv("CHOST")
         if self._is_msvc:
             # The somewhat older configure script of m4 does not understand the canonical names of Visual Studio
             build_canonical_name = False
