@@ -1,0 +1,19 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -539,16 +539,6 @@ CFLAGS="$old_CFLAGS"])
+ AM_CONDITIONAL(HAVE_NO_PACKED_NOT_ALIGNED_WARNING,
+ 	       [test "x$ac_cv_no_packed_not_aligned" != "xno"])
+ 
+-saved_LIBS="$LIBS"
+-AC_SEARCH_LIBS([argp_parse], [argp])
+-LIBS="$saved_LIBS"
+-case "$ac_cv_search_argp_parse" in
+-        no) AC_MSG_FAILURE([failed to find argp_parse]) ;;
+-        -l*) argp_LDADD="$ac_cv_search_argp_parse" ;;
+-        *) argp_LDADD= ;;
+-esac
+-AC_SUBST([argp_LDADD])
+-
+ saved_LIBS="$LIBS"
+ AC_SEARCH_LIBS([fts_close], [fts])
+ LIBS="$saved_LIBS"

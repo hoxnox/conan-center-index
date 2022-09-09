@@ -1,0 +1,14 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b88f0f8..95769c9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -387,9 +387,6 @@ set(HAVE_DWARF2_99_EXTENSION NOT ${HAVE_STRICT_DWARF2_32BIT_OFFSET})
+ message(STATUS "Checking producer generates only 32bit... ${HAVE_STRICT_DWARF2_32BIT_OFFSET}")
+ 
+ 
+-# This references cmake/FindLibElf.cmake. See cmake documentation.
+-find_package(LibElf REQUIRED)
+-list(APPEND CMAKE_REQUIRED_INCLUDES ${LIBELF_INCLUDE_DIRS})
+ 
+ configure_file(${CMAKE_SOURCE_DIR}/source_subfolder/config.h.in.cmake ${CMAKE_BINARY_DIR}/config.h)
+ 
