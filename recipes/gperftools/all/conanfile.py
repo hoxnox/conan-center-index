@@ -50,7 +50,9 @@ class CMakeConan(ConanFile):
         cmake.install()
 
     def package_info(self):
-        if self.options.cpuprof or self.options.heapprof or self.options.heapchecker or self.options.debugalloc:
+        if self.options.cpuprof:
+            self.cpp_info.libs = ["tcmalloc_and_profiler"]
+        elif self.options.heapprof or self.options.heapchecker or self.options.debugalloc:
             self.cpp_info.libs = ["tcmalloc"]
         else:
             self.cpp_info.libs = ["tcmalloc_minimal"]
