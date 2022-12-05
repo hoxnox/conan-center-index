@@ -13,41 +13,44 @@ class CMakeConan(ConanFile):
     license = "BSD-3-Clause"
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared":[True, False], "cpuprof":[True, False], "heapprof":[True, False], "heapchecker":[True, False]}
-    default_options = "shared=False", "cpuprof=False", "heapprof=False", "heapchecker=False"
+    options = {"shared":[True, False], "cpuprof":[True, False], "heapprof":[True, False], "heapchecker":[True, False], "debugalloc":[True, False], "minimal":[True, False]}
+    default_options = "shared=False", "cpuprof=False", "heapprof=False", "heapchecker=False", "debugalloc=False", "minimal=True"
 
-    _source_subfolder = "source_subfolder"
     _cmake = None
-    _autotools = None
+
+    @property
+    def _source_subfolder(self):
+        return "source_subfolder"
 
     def source(self):
-        tools.get(**self.conan_data["sources"][self.version], strip_root=True, destination=self._source_subfolder)
+        tools.get(**self.conan_data["sources"][self.version])
+        extracted_dir = self.name + "-" + self.version
+        os.rename(extracted_dir, self._source_subfolder)
 
-    def _configure_autotools(self):
-        if self._autotools:
-            return self._autotools
-        self._autotools = AutoToolsBuildEnvironment(self)
-        args = [
-            "" if self.options.cpuprof or self.options.heapprof or self.options.heapchecker else "--enable-minimal",
-            "--enable-shared" if self.options.shared else "--enable-static",
-            "--disable-static" if self.options.shared else "--disable-shared",
-            "--enable-cpu-profiler" if self.options.cpuprof else "--disable-cpu-profiler",
-            "--enable-heap-profiler" if self.options.heapprof else "--disable-heap-profiler",
-            "--enable-heap-checker" if self.options.heapchecker else "--disable-heap-checker",
-        ]
-        self._autotools.configure(args=args, configure_dir=self._source_subfolder)
-        return self._autotools
+    def _configure_cmake(self):
+        if self._cmake:
+            return self._cmake
+
+        self.cmake_ = CMake(self)
+        self.cmake_.definitions["BUILD_SHARED_LIBS"] = self.options.shared
+        self.cmake_.definitions["DEFAULT_BUILD_CPU_PROFILER"] = self.options.cpuprof
+        self.cmake_.definitions["DEFAULT_BUILD_HEAP_PROFILER"] = self.options.heapprof
+        self.cmake_.definitions["DEFAULT_BUILD_HEAP_CHECKER"] = self.options.heapchecker
+        self.cmake_.definitions["DEFAULT_BUILD_DEBUGALLOC"] = self.options.debugalloc
+        self.cmake_.definitions["DEFAULT_BUILD_MINIMAL"] = self.options.minimal
+        self.cmake_.configure(source_folder = self._source_subfolder)
+        return self.cmake_
 
     def build(self):
-        autotools = self._configure_autotools()
-        autotools.make()
+        cmake = self._configure_cmake()
+        cmake.build()
 
     def package(self):
-        autotools = self._configure_autotools()
-        autotools.install()
+        cmake = self._configure_cmake()
+        cmake.install()
 
     def package_info(self):
-        if self.options.cpuprof or self.options.heapprof or self.options.heapchecker:
+        if self.options.cpuprof or self.options.heapprof or self.options.heapchecker or self.options.debugalloc:
             self.cpp_info.libs = ["tcmalloc"]
         else:
             self.cpp_info.libs = ["tcmalloc_minimal"]
