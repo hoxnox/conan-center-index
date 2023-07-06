@@ -1,10 +1,10 @@
 from conans import ConanFile, CMake, tools
 import os
+import glob
 
 
 class TdConan(ConanFile):
     name = "td"
-    version = "1.8.0"
     description = "TDLib (Telegram Database library) is a cross-platform library for building [Telegram](https://telegram.org) clients. It can be easily used from almost any programming language."
     topics = ("conan", "telegram", "communication", "messaging", "protocols")
     url = "https://github.com/hoxnox/conan-center-index"
@@ -38,7 +38,7 @@ class TdConan(ConanFile):
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
-        extracted_dir = self.name + "-" + self.version
+        extracted_dir = glob.glob(self.name + "-*/")[0]
         os.rename(extracted_dir, self._source_subfolder)
 
     def _configure_cmake(self):
