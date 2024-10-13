@@ -1,0 +1,4 @@
+sources:
+  "8.0.2":
+    url: http://downloads.sourceforge.net/mathgl/mathgl-8.0.2.tar.gz
+    sha256: 71660995684a6b0a2823f678f6c438ababa474a115246cdf5f9b0b460abfcac1
