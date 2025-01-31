@@ -101,24 +101,18 @@ class MathglConan(ConanFile):
         # expected to be found w/o conan: opengl, glut, fltk, wxwidgets, mpi, ltdl, gsl, qt
         if self.options.zlib:
             self.requires("zlib/[>=1.2.11]")
-            # self.options["zlib"].shared = False
         if self.options.png:
             self.requires("libpng/[>=1.6.34]")
-            # self.options["libpng"].shared = False
         if self.options.jpeg:
             self.requires("libjpeg-turbo/[>=1.5.2]")
-            # self.options["libjpeg-turbo"].shared = False
             # set jpeg version 62
         if self.options.gif:
             self.requires("giflib/[>=5.1.3]")
-            # self.options["giflib"].shared = False
         if self.options.pdf:
             self.requires("libharu/2.3.0")
-            # self.options["libharu"].shared = False
         if self.options.hdf5:
             if not self.options.lgpl:
                 self.requires("hdf5/[>=1.10.5]")
-                # self.options["HDF5"].shared = False
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
@@ -129,7 +123,6 @@ class MathglConan(ConanFile):
        tc = CMakeToolchain(self)
        for k, v in self.cmake_options.items():
            tc.variables[k] = v
-       tc.variables["SOME_TEST_VAR"] = True
        tc.generate()
 
     def build(self):
