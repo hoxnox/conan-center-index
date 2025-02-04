@@ -49,7 +49,7 @@ class PcapplusplusConan(ConanFile):
             self.requires("npcap/1.70")
         else:
             if self.options.xdp:
-                self.requires("libbpf/1.3.0")
+                self.requires("libbpf/1.5.0")
                 self.requires("libxdp/1.5.1")
             self.requires("libpcap/1.10.1")
 

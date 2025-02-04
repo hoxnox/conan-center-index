@@ -43,7 +43,7 @@ class LibbpfConan(ConanFile):
         basic_layout(self, src_folder="src")
 
     def requirements(self):
-        self.requires("libbpf/1.3.0")
+        self.requires("libbpf/1.5.0", transitive_headers=True, transitive_libs=True)
 
     def validate(self):
         if self.settings.os != "Linux":
@@ -72,7 +72,10 @@ class LibbpfConan(ConanFile):
         autotoolsdeps.generate()
 
     def build(self):
-        with chdir(self, os.path.join(self.source_folder)):
+        env = Environment()
+        env.define("BPF_CFLAGS", f'-I{self.dependencies["libbpf"].package_folder}/include')
+        envvars = env.vars(self, scope="build")
+        with envvars.apply():
             autotools = Autotools(self)
             with chdir(self, os.path.join(self.source_folder, "lib")):
                 autotools.make(target="libxdp")
