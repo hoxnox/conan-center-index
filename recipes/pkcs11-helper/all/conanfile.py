@@ -7,7 +7,7 @@ import os
 
 required_conan_version = ">=1.53"
 
-class LibbpfConan(ConanFile):
+class LibPkcs11HelperConan(ConanFile):
     name = "pkcs11-helper"
     description = "PKCS11 helper library"
     license = "BSD-3-Clause"
@@ -24,6 +24,7 @@ class LibbpfConan(ConanFile):
     default_options = {
         "shared": False,
         "fPIC": True,
+        "openssl/*:no_dso": True,
     }
 
     def configure(self):
@@ -48,13 +49,6 @@ class LibbpfConan(ConanFile):
 
     def generate(self):
         tc = AutotoolsToolchain(self)
-        tc.make_args.extend([
-            "PREFIX={}".format(""),
-            "DESTDIR={}".format(self.package_folder),
-            "LIBSUBDIR={}".format("lib"),
-        ])
-        if not self.options.shared:
-            tc.configure_args.append("BUILD_STATIC_ONLY={}".format(1))
         tc.generate()
 
         pkgdeps = PkgConfigDeps(self)
@@ -75,5 +69,5 @@ class LibbpfConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["pkcs11-helper"]
-        self.cpp_info.set_property("pkg_config_name", "pkcs11-helper")
+        self.cpp_info.names["pkg_config"] = "pkcs11-helper"
 
