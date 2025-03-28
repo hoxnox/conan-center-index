@@ -36,6 +36,8 @@ class LibTpm2TssConan(ConanFile):
 
     def requirements(self):
         self.requires("openssl/[~3]", transitive_headers=True)
+        self.requires("json-c/[~0.18]", transitive_headers=True)
+        self.requires("libuuid/[~1.0.3]", transitive_headers=True)
 
     def validate(self):
         if self.settings.os != "Linux":

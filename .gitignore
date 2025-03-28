@@ -120,3 +120,5 @@ venv.bak/
 
 # scons build files
 *.dblite
+
+CMakeUserPresets.json
