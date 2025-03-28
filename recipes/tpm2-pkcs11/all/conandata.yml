@@ -1,0 +1,4 @@
+sources:
+  "1.9.1":
+    url: "https://github.com/tpm2-software/tpm2-pkcs11/releases/download/1.9.1/tpm2-pkcs11-1.9.1.tar.gz"
+    sha256: "ce24aa5ec2471545576e892b6f64fd873a424371bbf9be4ca3a0e689ea11c9b7"
