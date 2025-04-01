@@ -50,6 +50,8 @@ class LibTpm2TssConan(ConanFile):
         tc = AutotoolsToolchain(self)
         tc.configure_args.append("--disable-fapi")
         tc.configure_args.append("--disable-tcti-cmd")
+        #tc.configure_args.append("--disable-tcti-device")
+        tc.configure_args.append("--with-tctidefaultconfig=/dev/tpmrm0")
         tc.configure_args.append("--disable-tcti-libtpms")
         tc.configure_args.append("--disable-tcti-mssim")
         tc.configure_args.append("--disable-tcti-pcap")
@@ -78,7 +80,6 @@ class LibTpm2TssConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = [
-            "tss2-tcti-device",
             "tss2-tcti-i2c-helper",
             "tss2-tctildr",
             "tss2-tcti-spidev",
@@ -87,7 +88,8 @@ class LibTpm2TssConan(ConanFile):
             "tss2-mu",
             "tss2-policy",
             "tss2-rc",
-            "tss2-sys"
+            "tss2-sys",
+            "tss2-tcti-device"
         ]
         self.cpp_info.set_property("pkg_config_name", "tpm2-tss")
 
