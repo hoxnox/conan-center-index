@@ -1,7 +1,7 @@
 from conan import ConanFile
 from conan.tools.layout import basic_layout
-from conan.tools.gnu import Autotools, AutotoolsToolchain, AutotoolsDeps
-from conan.tools.files import copy, get
+from conan.tools.gnu import Autotools, AutotoolsToolchain, AutotoolsDeps, PkgConfigDeps
+from conan.tools.files import copy, get, rmdir
 from conan.errors import ConanInvalidConfiguration
 import os
 
@@ -36,7 +36,11 @@ class LibuuidConan(ConanFile):
         tc = AutotoolsToolchain(self)
         tc.configure_args.append("--enable-shared=%s" % ("yes" if self.options.shared else "no"))
         tc.configure_args.append("--enable-static=%s" % ("no" if self.options.shared else "yes"))
+        tc.extra_cflags.append("-D_XOPEN_SOURCE=600")
         tc.generate()
+
+        pkgdeps = PkgConfigDeps(self)
+        pkgdeps.generate()
 
         autotoolsdeps = AutotoolsDeps(self)
         autotoolsdeps.generate()
@@ -52,4 +56,5 @@ class LibuuidConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["uuid"]
+        self.cpp_info.set_property("pkg_config_name", "uuid")
 
