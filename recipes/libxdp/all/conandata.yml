@@ -1,5 +1,13 @@
 sources:
+  "1.5.3":
+    url: "https://github.com/xdp-project/xdp-tools/archive/v1.5.3.tar.gz"
+    sha256: "67b41598030efc1a152c75d3f15c3a461d2c36bfef64847fd0ed36b36885980d"
   "1.5.1":
     url: "https://github.com/xdp-project/xdp-tools/archive/v1.5.1.tar.gz"
     sha256: "aa1119a296412dbf19b50d4250a855ca7a7c56fcfbe0a6c02cd10ab1798f5b75"
 
+patches:
+  "1.5.3":
+    - patch_file: "patches/0001-xsk-frags-support.patch"
+      patch_description: program should state that it supports XDP fragments
+      patch_type: conan

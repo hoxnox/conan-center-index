@@ -1,13 +1,15 @@
-from conan import ConanFile
-from conan.errors import ConanInvalidConfiguration
-from conan.tools.env import Environment
-from conan.tools.files import copy, get, rm, rmdir, chdir
-from conan.tools.gnu import Autotools, AutotoolsToolchain, AutotoolsDeps, PkgConfigDeps
-from conan.tools.layout import basic_layout
 import os
 import shutil
+from conan.errors import ConanInvalidConfiguration
+from conan.tools.env import Environment
+from conan.tools.files import apply_conandata_patches, export_conandata_patches, copy, get, rm, chdir
+from conan.tools.gnu import Autotools, AutotoolsToolchain, AutotoolsDeps, PkgConfigDeps
+from conan.tools.layout import basic_layout
+
+from conan import ConanFile
 
 required_conan_version = ">=1.54.0"
+
 
 class LibbpfConan(ConanFile):
     name = "libxdp"
@@ -28,6 +30,7 @@ class LibbpfConan(ConanFile):
         "shared": False,
         "fPIC": True,
         "customXskProg": "",
+        "libbpf/*:with_uapi_headers": True,
     }
 
     exports_sources = "config.mk"
@@ -44,6 +47,9 @@ class LibbpfConan(ConanFile):
 
     def layout(self):
         basic_layout(self, src_folder="src")
+
+    def export_sources(self):
+        export_conandata_patches(self)
 
     def requirements(self):
         self.requires("libbpf/1.5.0", transitive_headers=True, transitive_libs=True)
@@ -66,6 +72,9 @@ class LibbpfConan(ConanFile):
             "DESTDIR={}".format(self.package_folder),
             "LIBSUBDIR={}".format("lib"),
         ])
+        if not self.options.shared:
+            tc.make_args.append("BUILD_STATIC_ONLY={}".format(1))
+            tc.configure_args.append("BUILD_STATIC_ONLY={}".format(1))
         tc.generate()
 
         pkgdeps = PkgConfigDeps(self)
@@ -74,9 +83,16 @@ class LibbpfConan(ConanFile):
         autotoolsdeps = AutotoolsDeps(self)
         autotoolsdeps.generate()
 
+    def _patch_sources(self):
+        apply_conandata_patches(self)
+
     def build(self):
+        self._patch_sources()
         if self.options.customXskProg != "":
             dest = os.path.join(self.source_folder, "lib/libxdp/xsk_def_xdp_prog.c")
+            shutil.copyfile(str(self.options.customXskProg), dest)
+            self.output.info(f"custom prog: {self.options.customXskProg} -> {dest}")
+            dest = os.path.join(self.source_folder, "lib/libxdp/xsk_def_xdp_prog_5.3.c")
             shutil.copyfile(str(self.options.customXskProg), dest)
             self.output.info(f"custom prog: {self.options.customXskProg} -> {dest}")
         env = Environment()
@@ -98,4 +114,6 @@ class LibbpfConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["xdp"]
-
+        for dir in self.dependencies["libbpf"].cpp_info.includedirs:
+            self.cpp_info.includedirs.append(dir)
+        self.output.info(f"includedirs: {self.cpp_info.includedirs}")

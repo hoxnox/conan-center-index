@@ -1,0 +1,12 @@
+diff --git a/lib/libxdp/xsk.c b/lib/libxdp/xsk.c
+index 566ceda..d0c46f8 100644
+--- a/lib/libxdp/xsk.c
++++ b/lib/libxdp/xsk.c
+@@ -876,6 +876,7 @@ static int __xsk_setup_xdp_prog(struct xsk_socket *xsk, int *xsks_map_fd)
+ 		if (err)
+ 			goto err_prog_load;
+ 
++		xdp_program__set_xdp_frags_support(ctx->xdp_prog, true);
+ 		err = xdp_program__attach(ctx->xdp_prog, ctx->ifindex,
+ 					  xsk_convert_xdp_flags(xsk->config.xdp_flags), 0);
+ 		if (err)
