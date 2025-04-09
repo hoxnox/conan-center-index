@@ -1,10 +1,15 @@
-from conans import AutoToolsBuildEnvironment, ConanFile, tools
-from conans.errors import ConanInvalidConfiguration
-import functools
+from conan import ConanFile
+from conan.errors import ConanInvalidConfiguration
+from conan.tools.apple import fix_apple_shared_install_name
+from conan.tools.build import cross_building
+from conan.tools.env import VirtualBuildEnv, VirtualRunEnv
+from conan.tools.files import copy, get, rm, rmdir, replace_in_file, apply_conandata_patches, export_conandata_patches
+from conan.tools.gnu import Autotools, AutotoolsDeps, AutotoolsToolchain
+from conan.tools.layout import basic_layout
+from conan.tools.microsoft import unix_path, is_msvc, MSBuildDeps, MSBuildToolchain, MSBuild
 import os
-import shutil
 
-required_conan_version = ">=1.36.0"
+required_conan_version = ">=1.54.0"
 
 
 class CyrusSaslConan(ConanFile):
@@ -17,8 +22,9 @@ class CyrusSaslConan(ConanFile):
         "It can be used on the client or server side "
         "to provide authentication and authorization services."
     )
-    topics = ("SASL", "authentication", "authorization")
+    topics = ("sasl", "authentication", "authorization")
 
+    package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
@@ -35,6 +41,7 @@ class CyrusSaslConan(ConanFile):
         "with_postgresql": [True, False],
         "with_mysql": [True, False],
         "with_sqlite3": [True, False],
+        "with_saslauthd": [True, False],
     }
     default_options = {
         "shared": False,
@@ -51,80 +58,75 @@ class CyrusSaslConan(ConanFile):
         "with_postgresql": False,
         "with_mysql": False,
         "with_sqlite3": False,
+        "with_saslauthd": True,
     }
 
     @property
-    def _source_subfolder(self):
-        return "source_subfolder"
+    def _settings_build(self):
+        return getattr(self, "settings_build", self.settings)
 
-    @property
-    def _user_info_build(self):
-        return getattr(self, "user_info_build", self.deps_user_info)
+    def export_sources(self):
+        export_conandata_patches(self)
 
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
+            # saslauthd doesn't compile on Windows
+            # https://www.cyrusimap.org/sasl/sasl/windows.html#install-windows
+            del self.options.with_saslauthd
+        if is_msvc(self):
+            # always required
+            del self.options.with_openssl
+            # not used
+            del self.options.with_postgresql
+            del self.options.with_mysql
+            del self.options.with_sqlite3
 
     def configure(self):
         if self.options.shared:
-            del self.options.fPIC
-        del self.settings.compiler.libcxx
-        del self.settings.compiler.cppstd
+            self.options.rm_safe("fPIC")
+        self.settings.rm_safe("compiler.cppstd")
+        self.settings.rm_safe("compiler.libcxx")
+
+    def layout(self):
+        basic_layout(self, src_folder="src")
 
     def requirements(self):
-        if self.options.with_openssl:
-            self.requires("openssl/1.1.1m")
-        if self.options.with_postgresql:
-            self.requires("libpq/13.4")
-        if self.options.with_mysql:
-            self.requires("libmysqlclient/8.0.25")
-        if self.options.with_sqlite3:
-            self.requires("sqlite3/3.37.2")
-        if self.options.with_gssapi:
-            raise ConanInvalidConfiguration("with_gssapi requires krb5 recipe, not yet available in CCI")
-            self.requires("krb5/1.18.3")
+        if is_msvc(self) or self.options.with_openssl:
+            self.requires("openssl/[>=1.1 <4]")
+        if self.options.get_safe("with_postgresql"):
+            self.requires("libpq/15.4")
+        if self.options.get_safe("with_mysql"):
+            self.requires("libmysqlclient/8.1.0")
+        if self.options.get_safe("with_sqlite3"):
+            self.requires("sqlite3/3.44.2")
 
     def validate(self):
-        if self.settings.os == "Windows":
+        if is_msvc(self) and not self.options.shared:
+            raise ConanInvalidConfiguration("Static library output is not supported when building with MSVC")
+        if self.options.with_gssapi:
             raise ConanInvalidConfiguration(
-                "Cyrus SASL package is not compatible with Windows yet."
+                f"{self.name}:with_gssapi=True requires krb5 recipe, not yet available in conan-center",
             )
 
     def build_requirements(self):
-        self.build_requires("gnu-config/cci.20201022")
+        if not is_msvc(self):
+            self.tool_requires("gnu-config/cci.20210814")
 
     def source(self):
-        tools.get(**self.conan_data["sources"][self.version],
-                  destination=self._source_subfolder, strip_root=True)
+        get(self, **self.conan_data["sources"][self.version], strip_root=True)
 
-    def _patch_sources(self):
-        shutil.copy(self._user_info_build["gnu-config"].CONFIG_SUB,
-                    os.path.join(self._source_subfolder, "config", "config.sub"))
-        shutil.copy(self._user_info_build["gnu-config"].CONFIG_GUESS,
-                    os.path.join(self._source_subfolder, "config", "config.guess"))
+    def _generate_autotools(self):
+        env = VirtualBuildEnv(self)
+        env.generate()
+        if not cross_building(self):
+            env = VirtualRunEnv(self)
+            env.generate(scope="build")
 
-        configure = os.path.join(self._source_subfolder, "configure")
-        # relocatable shared libs on macOS
-        tools.replace_in_file(configure, "-install_name \\$rpath/", "-install_name @rpath/")
-        # avoid SIP issues on macOS when dependencies are shared
-        if tools.is_apple_os(self.settings.os):
-            libpaths = ":".join(self.deps_cpp_info.lib_paths)
-            tools.replace_in_file(
-                configure,
-                "#! /bin/sh\n",
-                "#! /bin/sh\nexport DYLD_LIBRARY_PATH={}:$DYLD_LIBRARY_PATH\n".format(libpaths),
-            )
-
-    @functools.lru_cache(1)
-    def _configure_autotools(self):
-        autotools = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
-
+        tc = AutotoolsToolchain(self)
         yes_no = lambda v: "yes" if v else "no"
-        rootpath = lambda req: tools.unix_path(self.deps_cpp_info[req].rootpath)
-        rootpath_no = lambda v, req: rootpath(req) if v else "no"
-        args = [
-            "--enable-shared={}".format(yes_no(self.options.shared)),
-            "--enable-static={}".format(yes_no(not self.options.shared)),
+        rootpath_no = lambda v, req: unix_path(self, self.dependencies[req].package_folder) if v else "no"
+        tc.configure_args.extend([
             "--disable-sample",
             "--disable-macos-framework",
             "--with-dblib=none",
@@ -143,33 +145,118 @@ class CyrusSaslConan(ConanFile):
             "--with-mysql={}".format(rootpath_no(self.options.with_mysql, "libmysqlclient")),
             "--without-sqlite",
             "--with-sqlite3={}".format(rootpath_no(self.options.with_sqlite3, "sqlite3")),
-        ]
+            "--with-saslauthd={}".format(yes_no(self.options.with_saslauthd)),
+        ])
         if self.options.with_gssapi:
-            args.append("--with-gss_impl=mit")
+            tc.configure_args.append("--with-gss_impl=mit")
+        tc.generate()
 
-        autotools.configure(configure_dir=self._source_subfolder, args=args)
-        return autotools
+        deps = AutotoolsDeps(self)
+        deps.generate()
 
-    def build(self):
-        self._patch_sources()
-        autotools = self._configure_autotools()
+    def _patch_sources_autotools(self):
+        for gnu_config in [
+            self.conf.get("user.gnu-config:config_guess", check_type=str),
+            self.conf.get("user.gnu-config:config_sub", check_type=str),
+        ]:
+            if gnu_config:
+                copy(self, os.path.basename(gnu_config),
+                     src=os.path.dirname(gnu_config),
+                     dst=os.path.join(self.source_folder, "config"))
+
+    def _build_autotools(self):
+        self._patch_sources_autotools()
+        autotools = Autotools(self)
+        autotools.configure()
         autotools.make()
 
+    @property
+    def _msbuild_configuration(self):
+        return "Debug" if self.settings.build_type == "Debug" else "Release"
+
+    def _generate_msvc(self):
+        tc = MSBuildToolchain(self)
+        tc.configuration = self._msbuild_configuration
+        # disable OpenSSL 3 warnings, which get raised as errors
+        tc.cxxflags.append("/wo4996")
+        tc.generate()
+
+        deps = MSBuildDeps(self)
+        deps.configuration = self._msbuild_configuration
+        deps.generate()
+
+    def _patch_sources_msvc(self):
+        # TODO: to remove once https://github.com/conan-io/conan/pull/12817 available in conan client
+        platform_toolset = MSBuildToolchain(self).toolset
+        import_conan_generators = ""
+        for props_file in ["conantoolchain.props", "conandeps.props"]:
+            props_path = os.path.join(self.generators_folder, props_file)
+            if os.path.exists(props_path):
+                import_conan_generators += f"<Import Project=\"{props_path}\" />"
+        for vcxproj_file in self.source_path.joinpath("win32").glob("*.vcxproj"):
+            replace_in_file(self, vcxproj_file,
+                            "<PlatformToolset>v140</PlatformToolset>",
+                            f"<PlatformToolset>{platform_toolset}</PlatformToolset>")
+            replace_in_file(self, vcxproj_file, "<WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>", "")
+            if props_path:
+                replace_in_file(self, vcxproj_file,
+                                '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />',
+                                f'{import_conan_generators}<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />')
+        replace_in_file(self, os.path.join(self.source_folder, "win32", "openssl.props"),
+                        "libeay32.lib;", "")
+        # https://github.com/cyrusimap/cyrus-sasl/issues/730
+        copy(self, "md5global.h",
+             src=os.path.join(self.source_folder, "win32", "include"),
+             dst=os.path.join(self.source_folder, "include"))
+
+    def _build_msvc(self):
+        self._patch_sources_msvc()
+        msbuild = MSBuild(self)
+        msbuild.build_type = self._msbuild_configuration
+        msbuild.build(sln=os.path.join(self.source_folder, "win32", "cyrus-sasl-common.sln"))
+        msbuild.build(sln=os.path.join(self.source_folder, "win32", "cyrus-sasl-core.sln"))
+        # TODO: add sasldb support
+        # msbuild.build(sln=os.path.join(self.source_folder, "win32", "cyrus-sasl-sasldb.sln"))
+        if self.options.with_gssapi:
+            msbuild.build(sln=os.path.join(self.source_folder, "win32", "cyrus-sasl-gssapiv2.sln"))
+
+    def generate(self):
+        if is_msvc(self):
+            self._generate_msvc()
+        else:
+            self._generate_autotools()
+
+    def build(self):
+        apply_conandata_patches(self)
+        if is_msvc(self):
+            self._build_msvc()
+        else:
+            self._build_autotools()
+
     def package(self):
-        self.copy(pattern="COPYING", src=self._source_subfolder, dst="licenses")
-        autotools = self._configure_autotools()
-        autotools.install()
-        tools.rmdir(os.path.join(self.package_folder, "share"))
-        tools.rmdir(os.path.join(self.package_folder, "lib", "pkgconfig"))
-        tools.remove_files_by_mask(os.path.join(self.package_folder, "lib"), "*.la")
+        copy(self, "COPYING", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
+        if is_msvc(self):
+            copy(self, "*/sasl2.lib", os.path.join(self.source_folder, "win32"), os.path.join(self.package_folder, "lib"), keep_path=False)
+            copy(self, "*/sasl2.dll", os.path.join(self.source_folder, "win32"), os.path.join(self.package_folder, "bin"), keep_path=False)
+            copy(self, "*.h", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include", "sasl"))
+        else:
+            autotools = Autotools(self)
+            autotools.install()
+        rmdir(self, os.path.join(self.package_folder, "share"))
+        rmdir(self, os.path.join(self.package_folder, "lib", "pkgconfig"))
+        rm(self, "*.la", os.path.join(self.package_folder, "lib"), recursive=True)
+        fix_apple_shared_install_name(self)
 
     def package_info(self):
         self.cpp_info.set_property("pkg_config_name", "libsasl2")
         self.cpp_info.libs = ["sasl2"]
 
-        bindir = os.path.join(self.package_folder, "bin")
-        self.output.info("Appending PATH environment variable: {}".format(bindir))
-        self.env_info.PATH.append(bindir)
+        if self.settings.os in ["Linux", "FreeBSD"]:
+            self.cpp_info.system_libs = ["resolv"]
+            if self.options.with_saslauthd:
+                self.cpp_info.system_libs.append("crypt")
+        elif is_msvc(self):
+            self.cpp_info.system_libs = ["ws2_32"]
 
-        # TODO: to remove in conan v2 once pkg_config generator removed
-        self.cpp_info.names["pkg_config"] = "libsasl2"
+        # TODO: to remove in conan v2
+        self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))

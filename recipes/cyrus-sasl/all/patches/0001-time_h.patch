@@ -1,0 +1,27 @@
+diff --git a/lib/saslutil.c b/lib/saslutil.c
+index 46c628c..74dc540 100644
+--- a/lib/saslutil.c
++++ b/lib/saslutil.c
+@@ -59,7 +59,7 @@
+ #ifdef HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+-#ifdef HAVE_TIME_H
++#ifdef HAVE_SYS_TIME_H
+ #include <time.h>
+ #endif
+ #include "saslint.h"
+diff --git a/plugins/cram.c b/plugins/cram.c
+index d02e9ba..69d4912 100644
+--- a/plugins/cram.c
++++ b/plugins/cram.c
+@@ -56,6 +56,9 @@
+ #include <sasl.h>
+ #include <saslplug.h>
+ #include <saslutil.h>
++#ifdef HAVE_SYS_TIME_H
++#include <time.h>
++#endif
+ 
+ #include "plugin_common.h"
+ 
