@@ -49,9 +49,9 @@ class PcapplusplusConan(ConanFile):
             self.requires("npcap/1.70")
         else:
             if self.options.xdp:
-                self.requires("libbpf/1.5.0")
-                self.requires("libxdp/1.5.1")
-            self.requires("libpcap/1.10.1")
+                self.requires("libbpf/[>=1.5.0]")
+                self.requires("libxdp/[>=1.5.3]")
+            self.requires("libpcap/[~1.10]")
 
     def configure(self):
         if self.options.shared:
@@ -93,7 +93,7 @@ class PcapplusplusConan(ConanFile):
         apply_conandata_patches(self)
         replace_in_file(self, os.path.join(self.source_folder, "CMakeLists.txt"),
                         "set(CMAKE_CXX_STANDARD 11)",
-                        "")
+                        "add_definitions(-Wno-free-nonheap-object)")
         if Version(self.version) >= "24.09":
             replace_in_file(self, os.path.join(self.source_folder, "CMakeLists.txt"),
                             "set(CMAKE_POSITION_INDEPENDENT_CODE ON)",
