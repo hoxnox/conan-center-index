@@ -43,7 +43,6 @@ class LibbpfConan(ConanFile):
 
     def requirements(self):
         self.requires("linux-headers-generic/5.15.128", transitive_headers=True)
-        self.requires("elfutils/0.190", transitive_headers=True, transitive_libs=True)
         self.requires("zlib/[>=1.2.11 <2]")
 
     def validate(self):
@@ -61,9 +60,10 @@ class LibbpfConan(ConanFile):
         tc.make_args.extend([
             "PREFIX={}".format(""),
             "DESTDIR={}".format(self.package_folder),
-            "LIBSUBDIR={}".format("lib"),
+            "LIBSUBDIR={}".format("lib")
         ])
         if not self.options.shared:
+            tc.make_args.append("BUILD_STATIC_ONLY={}".format(1))
             tc.configure_args.append("BUILD_STATIC_ONLY={}".format(1))
         tc.generate()
 
@@ -85,6 +85,8 @@ class LibbpfConan(ConanFile):
         with chdir(self, os.path.join(self.source_folder, "src")):
             autotools = Autotools(self)
             autotools.install()
+        if self.options.with_uapi_headers:
+            copy(self, pattern="uapi/linux/*", src=os.path.join(self.source_folder, "include"), dst=os.path.join(self.package_folder, "include"))
 
         if self.options.shared:
             rm(self, "libbpf.a", os.path.join(self.package_folder, "lib"))
@@ -95,8 +97,12 @@ class LibbpfConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["bpf"]
+        self.cpp_info.system_libs = ["elf"]
         self.cpp_info.set_property("pkg_config_name", "libbpf")
 
         # TODO: Remove once v1 is no longer needed
         self.cpp_info.names["pkg_config"] = "libbpf"
+        if self.options.with_uapi_headers:
+            self.cpp_info.includedirs.append("include/uapi")
+        self.output.info(f"includedirs: {self.cpp_info.includedirs}")
 
