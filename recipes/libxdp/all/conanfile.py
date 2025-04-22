@@ -52,7 +52,7 @@ class LibbpfConan(ConanFile):
         export_conandata_patches(self)
 
     def requirements(self):
-        self.requires("libbpf/1.5.0", transitive_headers=True, transitive_libs=True)
+        self.requires("libbpf/1.5.0")
 
     def validate(self):
         if self.settings.os != "Linux":

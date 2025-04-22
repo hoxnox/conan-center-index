@@ -42,7 +42,7 @@ class LibbpfConan(ConanFile):
         basic_layout(self, src_folder="src")
 
     def requirements(self):
-        self.requires("linux-headers-generic/5.15.128", transitive_headers=True)
+        self.requires("linux-headers-generic/[~5.15]")
         self.requires("zlib/[>=1.2.11 <2]")
 
     def validate(self):
@@ -104,5 +104,5 @@ class LibbpfConan(ConanFile):
         self.cpp_info.names["pkg_config"] = "libbpf"
         if self.options.with_uapi_headers:
             self.cpp_info.includedirs.append("include/uapi")
-        self.output.info(f"includedirs: {self.cpp_info.includedirs}")
+        # self.output.info(f"includedirs: {self.cpp_info.includedirs}")
 

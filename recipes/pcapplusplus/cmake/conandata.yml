@@ -10,3 +10,6 @@ patches:
     - patch_file: "patches/0001-xsk-from-xdp.patch"
       patch_description: xsk.h is missing, use libxdp
       patch_type: conan
+    - patch_file: "patches/0003-xdp-fragments.patch"
+      patch_description: XDP fragments support (jumbo frames)
+      patch_type: conan

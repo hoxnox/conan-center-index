@@ -7,6 +7,9 @@ class TestPackageConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     generators = "CMakeDeps", "CMakeToolchain", "VirtualRunEnv"
     test_type = "explicit"
+    default_options = {
+        "libbpf/*:with_uapi_headers": True,
+    }
 
     def layout(self):
         cmake_layout(self)
