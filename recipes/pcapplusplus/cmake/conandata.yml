@@ -10,3 +10,6 @@ patches:
     - patch_file: "patches/0001-xsk-from-xdp.patch"
       patch_description: xsk.h is missing, use libxdp
       patch_type: conan
+    - patch_file: "patches/0002-http-track.patch"
+      patch_description: TRACK method support
+      patch_type: conan

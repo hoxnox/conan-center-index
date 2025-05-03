@@ -1,0 +1,38 @@
+diff --git a/Packet++/header/HttpLayer.h b/Packet++/header/HttpLayer.h
+index 3716c7b5..681f67c4 100644
+--- a/Packet++/header/HttpLayer.h
++++ b/Packet++/header/HttpLayer.h
+@@ -166,6 +166,8 @@ namespace pcpp
+ 			HttpCONNECT,
+ 			/** PATCH */
+ 			HttpPATCH,
++			/** TRACK */
++			HttpTRACK,
+ 			/** Unknown HTTP method */
+ 			HttpMethodUnknown
+ 		};
+diff --git a/Packet++/src/HttpLayer.cpp b/Packet++/src/HttpLayer.cpp
+index 46a37531..e15bdd31 100644
+--- a/Packet++/src/HttpLayer.cpp
++++ b/Packet++/src/HttpLayer.cpp
+@@ -142,8 +142,8 @@ namespace pcpp
+ 
+ 	// -------- Class HttpRequestFirstLine -----------------
+ 
+-	const std::string MethodEnumToString[9] = { "GET",   "HEAD",    "POST",    "PUT",  "DELETE",
+-		                                        "TRACE", "OPTIONS", "CONNECT", "PATCH" };
++	const std::string MethodEnumToString[10] = { "GET",   "HEAD",    "POST",    "PUT",  "DELETE",
++		                                        "TRACE", "OPTIONS", "CONNECT", "PATCH", "TRACK" };
+ 
+ 	const std::unordered_map<std::string, HttpRequestLayer::HttpMethod> HttpMethodStringToEnum{
+ 		{ "GET",     HttpRequestLayer::HttpMethod::HttpGET     },
+@@ -154,7 +154,8 @@ namespace pcpp
+ 		{ "TRACE",   HttpRequestLayer::HttpMethod::HttpTRACE   },
+ 		{ "OPTIONS", HttpRequestLayer::HttpMethod::HttpOPTIONS },
+ 		{ "CONNECT", HttpRequestLayer::HttpMethod::HttpCONNECT },
+-		{ "PATCH",   HttpRequestLayer::HttpMethod::HttpPATCH   }
++		{ "PATCH",   HttpRequestLayer::HttpMethod::HttpPATCH   },
++		{ "TRACK",   HttpRequestLayer::HttpMethod::HttpTRACK   }
+ 	};
+ 
+ 	const std::string VersionEnumToString[3] = { "0.9", "1.0", "1.1" };
