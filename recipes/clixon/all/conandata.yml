@@ -1,0 +1,10 @@
+sources:
+  "7.4.0":
+    url: "https://github.com/clicon/clixon/archive/refs/tags/7.4.0.tar.gz"
+    sha256: "8801625a2fc2572bb0d318227f1d6b04dfe52eae110b4919080a3fc16a9d9636"
+
+patches:
+  "7.4.0":
+    - patch_file: "patches/0001-nogit-version.patch"
+      patch_description: fix - version check script uses git
+      patch_type: conan

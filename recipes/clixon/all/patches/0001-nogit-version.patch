@@ -1,0 +1,12 @@
+diff --git a/configure b/configure
+index 5a5e3d9..831d895 100755
+--- a/configure
++++ b/configure
+@@ -2813,7 +2813,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ 
+ 
+ # Use GIT version (what if no git?)
+-CLIXON_VERSION="$(./scripts/version.sh)"
+ CLIXON_VERSION2=$(echo ${CLIXON_VERSION} | awk -F- '{print $1}')
+ CLIXON_VERSION_MAJOR=$(echo ${CLIXON_VERSION2} | awk -F. '{print $1}')
+ CLIXON_VERSION_MINOR=$(echo ${CLIXON_VERSION2} | awk -F. '{print $2}')
