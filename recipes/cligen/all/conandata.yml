@@ -1,0 +1,5 @@
+sources:
+  "7.4.0":
+    url: "https://github.com/clicon/cligen/archive/refs/tags/7.4.0.tar.gz"
+    sha256: "cfbeec48103170720450b03d03593d18fecdd365c0d1f1936ddb46e260699466"
+
