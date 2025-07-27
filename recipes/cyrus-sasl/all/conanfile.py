@@ -3,7 +3,7 @@ from conan.errors import ConanInvalidConfiguration
 from conan.tools.apple import fix_apple_shared_install_name
 from conan.tools.build import cross_building
 from conan.tools.env import VirtualBuildEnv, VirtualRunEnv
-from conan.tools.files import copy, get, rm, rmdir, replace_in_file, apply_conandata_patches, export_conandata_patches
+from conan.tools.files import copy, get, rm, rmdir, replace_in_file, export_conandata_patches, apply_conandata_patches
 from conan.tools.gnu import Autotools, AutotoolsDeps, AutotoolsToolchain
 from conan.tools.layout import basic_layout
 from conan.tools.microsoft import unix_path, is_msvc, MSBuildDeps, MSBuildToolchain, MSBuild
@@ -61,12 +61,12 @@ class CyrusSaslConan(ConanFile):
         "with_saslauthd": True,
     }
 
+    def export_sources(self):
+        export_conandata_patches(self)
+
     @property
     def _settings_build(self):
         return getattr(self, "settings_build", self.settings)
-
-    def export_sources(self):
-        export_conandata_patches(self)
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -115,6 +115,7 @@ class CyrusSaslConan(ConanFile):
 
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
+        apply_conandata_patches(self)
 
     def _generate_autotools(self):
         env = VirtualBuildEnv(self)
@@ -227,7 +228,6 @@ class CyrusSaslConan(ConanFile):
             self._generate_autotools()
 
     def build(self):
-        apply_conandata_patches(self)
         if is_msvc(self):
             self._build_msvc()
         else:
