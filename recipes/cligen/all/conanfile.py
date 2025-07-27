@@ -37,16 +37,19 @@ class CligenConan(ConanFile):
     def layout(self):
         basic_layout(self, src_folder="src")
 
+    def export_sources(self):
+        export_conandata_patches(self)
+
     def source(self):
         get(self, **self.conan_data["sources"][self.version], strip_root=True)
 
     def generate(self):
         tc = AutotoolsToolchain(self)
-        tc.make_args.extend([
-            "PREFIX={}".format(""),
-            "DESTDIR={}".format(self.package_folder),
-            "LIBSUBDIR={}".format("lib"),
-        ])
+        #tc.make_args.extend([
+        #    "PREFIX={}".format(""),
+        #    "DESTDIR={}".format(self.package_folder),
+        #    "LIBSUBDIR={}".format("lib"),
+        #])
         tc.generate()
 
         pkgdeps = PkgConfigDeps(self)
@@ -55,17 +58,20 @@ class CligenConan(ConanFile):
         autotoolsdeps = AutotoolsDeps(self)
         autotoolsdeps.generate()
 
+    def _patch_sources(self):
+        apply_conandata_patches(self)
+
     def build(self):
-        autotools = Autotools(self)
-        configure_args = []
-        if self.options.libxml2:
-            configure_args.append("--with-libxml2")
-        #if self.options.shared:
-        #    configure_args.extend(["--enable-shared", "--disable-static"])
-        #else:
-        #    configure_args.extend(["--disable-shared", "--enable-static"])
-        autotools.configure(args=configure_args)
-        autotools.make()
+        self._patch_sources()
+        env = Environment()
+        env.define("CLIGEN_VERSION", str(self.version))
+        with env.vars(self).apply():
+            autotools = Autotools(self)
+            configure_args = [f"CLIGEN_VERSION={self.version}"]
+            if self.options.libxml2:
+                configure_args.append("--with-libxml2")
+            autotools.configure(args=configure_args)
+            autotools.make()
 
     def package(self):
         autotools = Autotools(self)
