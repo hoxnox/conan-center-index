@@ -15,15 +15,18 @@ class ClixonConan(ConanFile):
     name = "clixon"
     description = "YANG-based configuration manager, with interactive CLI, NETCONF and RESTCONF interfaces, an embedded database and transaction mechanism."
     license = "Apache-2"
-    url = "https://github.com/clicon/cligen/"
+    url = "https://github.com/clicon/clixon/"
     homepage = "https://github.com/clicon/clixon/"
     topics = ("yang", "cli", "netconf")
 
+    package_type = "library"
     settings = "os", "arch", "compiler", "build_type"
     options = {
+        "shared": [True],
         "libxml2": [True, False],
     }
     default_options = {
+        "shared": True,
         "libxml2": True,
     }
 
@@ -43,9 +46,6 @@ class ClixonConan(ConanFile):
     def generate(self):
         tc = AutotoolsToolchain(self)
         tc.generate()
-
-        env = VirtualBuildEnv(self)
-        env.generate()
 
         pkgdeps = PkgConfigDeps(self)
         pkgdeps.generate()
@@ -77,5 +77,8 @@ class ClixonConan(ConanFile):
         autotools.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["clixon_cli", "clixon", "clixon_backend", "clixon_restconf"]
-        self.cpp_info.bindirs = [os.path.join(self.package_folder, "bin")]
+        # "clixon_restconf" is not in the list - it has undefined symbols see Makefile.in in sources
+        self.cpp_info.libs = ["clixon_cli", "clixon", "clixon_backend"]
+        self.cpp_info.libdirs.append(os.path.join(self.package_folder, "lib"))
+        self.cpp_info.bindirs.append(os.path.join(self.package_folder, "bin"))
+

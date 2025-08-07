@@ -79,4 +79,5 @@ class CligenConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["cligen"]
-        self.cpp_info.bindirs = [os.path.join(self.package_folder, "bin")]
+        self.cpp_info.libdirs.append(os.path.join(self.package_folder, "lib"))
+        self.cpp_info.bindirs.append(os.path.join(self.package_folder, "bin"))
